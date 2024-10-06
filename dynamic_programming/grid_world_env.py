@@ -129,3 +129,43 @@ class GridWorldEnv(gym.Env):
                 else:
                     print(self.grid[row, col], end=" ")
             print("")  # Newline at the end of the row
+
+    # 
+    def get_transition_info(self, state, action):
+        row, col = state
+        new_row, new_col = row, col  
+
+        # Determine the new position
+        if action == 0:  # Up
+            new_row = max(0, row - 1)
+        elif action == 1:  # Down
+            new_row = min(self.height - 1, row + 1)
+        elif action == 2:  # Left
+            new_col = max(0, col - 1)
+        elif action == 3:  # Right
+            new_col = min(self.width - 1, col + 1)
+
+        next_state = (new_row, new_col)
+
+        # Check if the new position hits a wall
+        if self.grid[new_row, new_col] == "W":
+            next_state = (row, col)  # Stay in the same position
+
+        # Reward logic
+        reward = 0
+        if self.grid[new_row, new_col] == "P":  # Positive reward
+            reward = 1
+        elif self.grid[new_row, new_col] == "N":  # Negative reward
+            reward = -1
+
+        is_done = self.grid[next_state] in {"P", "N"}  # Check if it's a terminal state
+        return next_state, reward, is_done
+
+ 
+    def get_next_states(self, action):
+        #Get the next states, rewards, and transition probabilities for each action
+        next_states = []
+        for a in range(self.action_space.n):
+            next_state, reward, done = self.get_transition_info(self.current_position, a)
+            next_states.append((next_state, reward, 1.0 if a == action else 0.0, False, done))  # The probability is 1.0 for the chosen action
+        return next_states
